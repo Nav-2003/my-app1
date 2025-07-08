@@ -117,7 +117,7 @@ function JoinRoom() {
       );
     };
   }
-    ws.onmessage = (e) => {
+    ws.onmessage = () => {
       sererr(true);
     };
     setflag(true);
