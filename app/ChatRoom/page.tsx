@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import {useSocket} from "../lib/SocketContext";
-
+import { Suspense } from "react";
 
 interface t{
 src:string,
@@ -31,7 +31,7 @@ function ChatBox({ allMsg }: { allMsg: t[]}) {
   );
 }
 
-export default function ChatRoom() {
+ function ChatRoom() {
   const [input, setInput] = useState("");
   const [allMsg, setallMsg] = useState<t[]>([]);
   const chatBoxRef = useRef<HTMLDivElement>(null);
@@ -111,5 +111,13 @@ useEffect(() => {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PageWrapper() {
+  return (
+    <Suspense fallback={<div>Loading chat...</div>}>
+      <ChatRoom />
+    </Suspense>
   );
 }
