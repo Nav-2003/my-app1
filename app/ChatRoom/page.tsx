@@ -4,7 +4,13 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import {useSocket} from "../lib/SocketContext";
 
-function ChatBox({ allMsg }: { allMsg: any[] }) {
+
+interface t{
+src:string,
+msg:string,
+username:string|null
+}
+function ChatBox({ allMsg }: { allMsg: t[]}) {
   return (
     <>
       {allMsg.map((msg, i) => {
@@ -27,7 +33,7 @@ function ChatBox({ allMsg }: { allMsg: any[] }) {
 
 export default function ChatRoom() {
   const [input, setInput] = useState("");
-  const [allMsg, setallMsg] = useState<{ src: String; msg: String }[]>([]);
+  const [allMsg, setallMsg] = useState<t[]>([]);
   const chatBoxRef = useRef<HTMLDivElement>(null);
   const searchParams=useSearchParams();
   const user=searchParams.get("user");

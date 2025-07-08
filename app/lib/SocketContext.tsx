@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useRef } from "react";
+import React, { createContext, useContext,  useRef } from "react";
 
 const SocketContext = createContext<WebSocket | null>(null);
 
