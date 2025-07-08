@@ -1,103 +1,212 @@
-import Image from "next/image";
+"use client";
+import { useRouter } from "next/navigation";
+import { useRecoilValue } from "recoil";
+import { useSocket } from "./lib/SocketContext";
+import { useEffect, useState } from "react";
 
-export default function Home() {
+function Timer({ user, code }: { user: string; code: number | undefined }) {
+  const router = useRouter();
+  const [count, setCount] = useState<number>(5);
+
+  useEffect(() => {
+    if (count === 0) {
+      // console.log(user);
+      //console.log(code);
+      router.push(`/ChatRoom?user=${user}&code=${code}`);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setCount((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [count, router, user, code]);
+
+  return <div className="mt-4">You are joined in {count} second</div>;
+}
+function CreateRoom() {
+  const [flag, setflag] = useState<boolean>(false);
+  const [user, setuser] = useState<string>("");
+  const [code, setcode] = useState<number>();
+  const wss = useSocket();
+  function createCode() {
+    if (!wss) return;
+    if (wss.readyState === WebSocket.OPEN) {
+      wss.send(
+        JSON.stringify({
+          username: user,
+          type: "create",
+        })
+      );
+    } else {
+      wss.onopen = () => {
+        wss.send(
+          JSON.stringify({
+            username: user,
+            type: "create",
+          })
+        );
+      };
+    }
+    
+        wss.onmessage = (e) => {
+      setflag(true);
+      try {
+        setcode(parseInt(e.data)); // assuming server sends { code: 1234 }
+      } catch {
+        setcode(parseInt(e.data)); // fallback if it's just raw code
+      }
+    }
+
+}
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <div className="flex justify-center mt-10">
+      <div className="w-80 p-6 bg-white/10 backdrop-blur-md rounded-xl shadow-lg text-white">
+        <label className="block text-sm font-medium text-white/80 mb-1">
+          Username:
+        </label>
+        <input
+          type="text"
+          placeholder="Enter your username"
+          value={user}
+          onChange={(e) => setuser(e.target.value)}
+          className="w-full px-3 py-1 rounded-md bg-white/20 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
         />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        {!flag && (
+          <button
+            className="bg-blue-600 p-2 rounded-xl mt-3 ml-25 hover:bg-blue-800 hover:scale-105 transition duration-200
+        cursor-pointer"
+            onClick={createCode}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            Create
+          </button>
+        )}
+        {flag && <Timer user={user} code={code} />}
+        {flag && <span>code: {code}</span>}
+      </div>
     </div>
   );
 }
+
+function JoinRoom() {
+  const [user, setuser] = useState<string>("");
+  const [code, setcode] = useState<string>("");
+  const [flag, setflag] = useState(false);
+  const [err, sererr] = useState(false);
+  const ws = useSocket();
+
+  function join() {
+    if (!ws) return;
+    if(ws.readyState===WebSocket.OPEN){
+       ws.send(
+        JSON.stringify({
+          type: "join",
+          code: parseInt(code),
+          username: user,
+        })
+      );
+    }
+    else{
+    ws.onopen = () => {
+      ws.send(
+        JSON.stringify({
+          type: "join",
+          code: parseInt(code),
+          username: user,
+        })
+      );
+    };
+  }
+    ws.onmessage = (e) => {
+      sererr(true);
+    };
+    setflag(true);
+  }
+  return (
+    <div className="flex justify-center mt-10">
+      <div className="w-80 p-6 bg-white/10 backdrop-blur-md rounded-xl shadow-lg text-white">
+        <label className="block text-sm font-medium text-white/80 mb-1">
+          Username:
+        </label>
+        <input
+          type="text"
+          placeholder="Enter your username"
+          value={user}
+          onChange={(e) => setuser(e.target.value)}
+          className="w-full px-3 py-1 rounded-md bg-white/20 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
+        />
+        <label className="block text-sm font-medium text-white/80 mb-1 mt-4">
+          Code:
+        </label>
+        <input
+          type="text"
+          placeholder="Enter code"
+          value={code}
+          onChange={(e) => {
+            setcode(e.target.value);
+          }}
+          className="w-full px-3 py-1 rounded-md bg-white/20 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
+        />
+        {!flag && (
+          <button
+            onClick={join}
+            className="bg-blue-600 p-2 px-4 rounded-xl mt-3 ml-25 hover:bg-blue-800 hover:scale-105 transition duration-200
+        cursor-pointer
+        "
+          >
+            Join
+          </button>
+        )}
+        {flag && !err ? (
+          <Timer user={user} code={parseInt(code)} />
+        ) : (
+          err && <div>invalid code....</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Page() {
+  const [create, setcreate] = useState(false);
+  const [join, setjoin] = useState(false);
+
+  return (
+    <>
+      <div className=" mt-20 flex justify-center items-center">
+        <div className="flex flex-col sm:flex-row gap-6">
+          <div
+            className="bg-white/10 backdrop-blur-md rounded-xl shadow-lg p-6 text-white text-center cursor-pointer hover:bg-indigo-500/20 transition-all duration-300 w-64"
+            onClick={() => {
+              setcreate(true);
+              setjoin(false);
+            }}
+          >
+            <h2 className="text-xl font-semibold mb-2">Create Chat Room</h2>
+            <p className="text-sm text-gray-300">
+              Start your own private chat space.
+            </p>
+          </div>
+
+          <div
+            className="bg-white/10 backdrop-blur-md rounded-xl shadow-lg p-6 text-white text-center cursor-pointer hover:bg-purple-500/20 transition-all duration-300 w-64"
+            onClick={() => {
+              setcreate(false);
+              setjoin(true);
+            }}
+          >
+            <h2 className="text-xl font-semibold mb-2">Join Chat Room</h2>
+            <p className="text-sm text-gray-300">
+              Enter an existing room with a code.
+            </p>
+          </div>
+        </div>
+      </div>
+      {create && <CreateRoom />}
+      {join && <JoinRoom />}
+    </>
+  );
+}
+
+export default Page;
